@@ -1,5 +1,7 @@
-# (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
-
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 
 from checkout_base import CheckoutBase
 from stubs import get_access_token, get_payment_configuration, get_waba
