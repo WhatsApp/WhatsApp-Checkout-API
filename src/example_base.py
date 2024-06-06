@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from checkout_base import CheckoutBase
-from stubs import get_access_token, get_payment_configuration, get_waba
+from stubs import get_access_token, get_app_secret, get_payment_configuration, get_waba
 
 
 class ExampleBase(CheckoutBase):
@@ -18,6 +18,13 @@ class ExampleBase(CheckoutBase):
         Env variable or your dedicated secrete storage, implement your own logic
         """
         return get_access_token()
+
+    def get_app_secret(self) -> str:
+        """
+        Get the app secret for the APP, which can be retrieved from the
+        Env variable or your dedicated secrete storage, implement your own logic
+        """
+        return get_app_secret()
 
     def get_waba(self) -> str:
         """

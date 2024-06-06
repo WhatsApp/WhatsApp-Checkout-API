@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import hashlib
+import hmac
 import json
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
@@ -25,6 +27,13 @@ class CheckoutBase(ABC):
     def get_access_token(self) -> str:
         """
         Get the access token for the WABA
+        """
+        pass
+
+    @abstractmethod
+    def get_app_secret(self) -> str:
+        """
+        Get the app secret for the APP
         """
         pass
 
@@ -285,3 +294,84 @@ class CheckoutBase(ABC):
             headers=http_headers,
         )
         print("\norder payment status response is:\n{}".format(response.json()))
+
+    def handle_webhook_call(self, headers: Dict[str, str], payload: str) -> None:
+        """
+        Handle the webhook callback from WhatsApp Business API.
+        """
+        if not self.verify_webhook(headers, payload):
+            print("this call cannot be verified, it's not coming from Meta Cloud API")
+            return
+        data = json.loads(payload)
+        object = data["object"]
+        if object != "whatsapp_business_account":
+            print(f"this call is not for whatsapp_business_account but {object}")
+            return
+        entry = data["entry"][0]
+        if entry["id"] != self.get_waba():
+            print(f"this call is not for {self.get_waba()} but {entry['id']}")
+            return
+        change = entry["changes"][0]
+        if change["field"] != "messages":
+            print(f"this call is not for messages but {change['field']}")
+            return
+        value = change["value"]
+        interactive = value["messages"][0].get("interactive")
+        if interactive and interactive["type"] == "payment":
+            payment = interactive["payment"]
+            print(
+                "this is payment confirmation message of transaction {}, reference_id {} and status {} for user {}".format(
+                    payment["transaction_id"],
+                    payment["reference_id"],
+                    payment["status"],
+                    value["metadata"]["display_phone_number"],
+                )
+            )
+            return
+        status = value["statuses"][0]
+        id = status.get("id")
+        recipient_id = status.get("recipient_id")
+        status_type = status.get("type")
+        status = status.get("status")
+        payment = status.get("payment")
+        timestamp = status.get("timestamp")
+        if (
+            recipient_id
+            and status_type == "payment"
+            and status in ["pending", "failed", "success", "canceled"]
+            and timestamp
+            and payment
+            and payment["reference_id"]
+        ):
+            print(
+                "this is a transaction status update message of transaction {}, reference_id {} and status {} for user {}".format(
+                    id,
+                    payment["reference_id"],
+                    status,
+                    value["metadata"]["display_phone_number"],
+                )
+            )
+            # call get_payment_status to get the payment status
+            self.get_payment_status(
+                list(self._phone_number_to_id_map.keys())[0], payment["reference_id"]
+            )
+            # call to your order management system to update the order status
+            return
+        print(
+            "this is not a payment confirmation or transaction status update message, raw message is:\n{}".format(
+                payload
+            )
+        )
+
+    def verify_webhook(self, headers: Dict[str, str], payload: str) -> bool:
+        """
+        Verify whether the webhook callback is from WhatsApp Business API.
+        Returns True if successful else False
+        """
+        hmac_in_header = str(headers["X-Hub-Signature-256"]).removeprefix("sha256=")
+        hmac_calculated = hmac.new(
+            self.get_app_secret().encode("utf-8"),
+            payload.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        return hmac.compare_digest(hmac_in_header, hmac_calculated)
