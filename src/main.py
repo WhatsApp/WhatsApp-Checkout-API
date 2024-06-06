@@ -77,6 +77,7 @@ def main() -> None:
         msg_body="Order Status Update",
         status="processing",
     )
+    example_base.get_payment_status(get_test_sender_phone_number(), reference_id)
 
 
 if __name__ == "__main__":

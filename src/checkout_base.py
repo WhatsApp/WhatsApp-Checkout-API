@@ -272,3 +272,16 @@ class CheckoutBase(ABC):
             url=f"{URL}/{phone_number_id}/messages", data=request, headers=http_headers
         )
         print("\norder status response is:\n{}".format(response.json()))
+
+    def get_payment_status(self, business_phone_number: str, reference_id: str) -> None:
+        """
+        Get the payment status of an order from WhatsApp Business API.
+        """
+        http_headers = self._get_headers()
+        payment_configuration = self.get_payment_configuration()
+        phone_number_id = self._get_sender_phone_number_id(business_phone_number)
+        response = requests.get(
+            url=f"{URL}/{phone_number_id}/payments/{payment_configuration}/{reference_id}",
+            headers=http_headers,
+        )
+        print("\norder payment status response is:\n{}".format(response.json()))
