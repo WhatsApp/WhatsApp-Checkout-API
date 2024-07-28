@@ -70,7 +70,7 @@ class CheckoutBase(ABC):
 
         for d in data:
             # translate number like "+1 631-555-5555" to "16315555555"
-            phone_number = "".join(
+            phone_number = " ".join(
                 c for c in d["display_phone_number"] if c in "0123456789"
             )
             self._phone_number_to_id_map[phone_number] = d["id"]
