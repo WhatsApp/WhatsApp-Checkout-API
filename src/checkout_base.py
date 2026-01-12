@@ -10,7 +10,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 import requests
-
 from elements import Amount, Header, Item
 
 URL = "https://graph.facebook.com/v19.0"

@@ -29,7 +29,7 @@ def get_example_discount_amount() -> Amount:
 def get_example_items(number: int, includes_sale_amount: bool) -> List[Item]:
     return [
         Item(
-            name=f"Product {i+1}",
+            name=f"Product {i + 1}",
             amount=Amount(value=1000 * (i + 1)),
             quantity=i + 1,
             sale_amount=(
